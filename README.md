@@ -14,7 +14,7 @@
 Например, если ваш проект лежит в `~/projects/my-app`:
 
 ```bash
-git clone https://github.com/Sts8987/LOGO.git /tmp/LOGO
+git clone https://github.com/Sts8987/agent-logo.git /tmp/LOGO
 cd ~/projects/my-app
 cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ .
 bash scripts/setup.sh
@@ -27,7 +27,7 @@ mkdir my-new-project && cd my-new-project
 git init
 npm init -y
 # Встроить логотип:
-git clone https://github.com/Sts8987/LOGO.git /tmp/LOGO
+git clone https://github.com/Sts8987/agent-logo.git /tmp/LOGO
 cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ .
 bash scripts/setup.sh
 ```
@@ -44,7 +44,7 @@ bash scripts/setup.sh
 
 ```bash
 # Клонировать LOGO-репозиторий во временную папку
-git clone https://github.com/Sts8987/LOGO.git /tmp/LOGO
+git clone https://github.com/Sts8987/agent-logo.git /tmp/LOGO
 
 # Скопировать ядро и логотипы в проект
 cp -r /tmp/LOGO/scripts/ /home/z/my-project/download/<имя-проекта>/scripts/
@@ -58,7 +58,7 @@ bash scripts/setup.sh
 Или одной командой:
 
 ```bash
-git clone https://github.com/Sts8987/LOGO.git /tmp/LOGO && \
+git clone https://github.com/Sts8987/agent-logo.git /tmp/LOGO && \
 cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ /home/z/my-project/download/<имя-проекта>/ && \
 cd /home/z/my-project/download/<имя-проекта> && bash scripts/setup.sh
 ```
@@ -80,7 +80,7 @@ cd /home/z/my-project/download/<имя-проекта> && bash scripts/setup.sh
 ```json
 {
   "dependencies": {
-    "logo-agent": "github:Sts8987/LOGO"
+    "logo-agent": "github:Sts8987/agent-logo"
   }
 }
 ```
