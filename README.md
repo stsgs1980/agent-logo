@@ -38,6 +38,41 @@ bash scripts/setup.sh
 - проверит `description` в `package.json`
 - определит тему логотипа для вашего проекта
 
+### В песочнице Z.ai
+
+Если проект создаётся в [Z.ai](https://chat.z.ai/), рабочий каталог проекта находится по пути `/home/z/my-project/download/`. Попросите агента встроить логотип — он выполнит команды:
+
+```bash
+# Клонировать LOGO-репозиторий во временную папку
+git clone https://github.com/Sts8987/LOGO.git /tmp/LOGO
+
+# Скопировать ядро и логотипы в проект
+cp -r /tmp/LOGO/scripts/ /home/z/my-project/download/<имя-проекта>/scripts/
+cp -r /tmp/LOGO/logos/   /home/z/my-project/download/<имя-проекта>/logos/
+
+# Перейти в проект и запустить установку
+cd /home/z/my-project/download/<имя-проекта>
+bash scripts/setup.sh
+```
+
+Или одной командой:
+
+```bash
+git clone https://github.com/Sts8987/LOGO.git /tmp/LOGO && \
+cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ /home/z/my-project/download/<имя-проекта>/ && \
+cd /home/z/my-project/download/<имя-проекта> && bash scripts/setup.sh
+```
+
+**Что происходит дальше:**
+- CI-воркфлоу (`.github/workflows/logo.yml`) при push в GitHub автоматически определит тему по `description` из `package.json` и вставит SVG вместо `{{LOGO}}` в README.md
+- Git-хук добавит логотип в тело каждого коммита
+- Сервер подписи (`server.js`) доступен по HTTP внутри песочницы
+
+**Пример в чате Z.ai:**
+> «Создай проект и встрои логотип NEURO»
+
+Агент сам клонирует LOGO-репозиторий, скопирует файлы и запустит `setup.sh`.
+
 ### Использование как npm-модуль
 
 В `package.json` вашего проекта:
