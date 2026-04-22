@@ -7,26 +7,38 @@
 
 ---
 
-## Быстрый старт — встроить в новый проект
+## Быстрый старт — встроить в проект
 
-### Способ 1. Копировать файлы вручную
+### В существующий проект
+
+Например, если ваш проект лежит в `~/projects/my-app`:
 
 ```bash
-# 1. Скопировать ядро и логотипы в корень вашего проекта
-cp -r scripts/  /путь/к/вашему/проекту/scripts/
-cp -r logos/    /путь/к/вашему/проекту/logos/
-
-# 2. Добавить description в package.json
-cd /путь/к/вашему/проекту
-jq '. + {description: "Описание вашего проекта"}' package.json > tmp.json && mv tmp.json package.json
-
-# 3. Поставить {{LOGO}} в README.md где нужен логотип
-
-# 4. Проверить
-node scripts/logo-agent.js "Описание вашего проекта" auto
+git clone https://github.com/Sts8987/LOGO.git /tmp/LOGO
+cd ~/projects/my-app
+cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ .
+bash scripts/setup.sh
 ```
 
-### Способ 2. Подключить как npm-зависимость (рекомендуется)
+### В новый проект
+
+```bash
+mkdir my-new-project && cd my-new-project
+git init
+npm init -y
+# Встроить логотип:
+git clone https://github.com/Sts8987/LOGO.git /tmp/LOGO
+cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ .
+bash scripts/setup.sh
+```
+
+`setup.sh` автоматически:
+- проверит зависимости (node, jq)
+- установит git-хук `prepare-commit-msg`
+- проверит `description` в `package.json`
+- определит тему логотипа для вашего проекта
+
+### Использование как npm-модуль
 
 В `package.json` вашего проекта:
 
@@ -61,9 +73,10 @@ var theme = logo.resolve(
 | Компонент | Файл | Куда | Когда |
 |---|---|---|---|
 | Ядро детекции | `scripts/logo-agent.js` | `scripts/` проекта | Всегда — основа |
+| Установка | `scripts/setup.sh` | `scripts/` проекта | Всегда — автоматическая настройка |
 | SVG логотипы | `logos/*.svg` (7 штук) | `logos/` проекта | Всегда — подстановка |
 | CI воркфлоу | `.github/workflows/logo.yml` | `.github/workflows/` | Если есть GitHub Actions |
-| Git-хук | `.git/hooks/prepare-commit-msg` | `.git/hooks/` | Если хотите лого в коммитах |
+| Git-хук | `scripts/prepare-commit-msg` | `.git/hooks/` | Если хотите лого в коммитах |
 | Сервер подписи | Код из `server.js` | В ваш Express-роутер | Если нужна email-подпись |
 
 ---
@@ -200,7 +213,9 @@ echo "dark" > .logo-mode
 ```
 LOGO/
 ├── scripts/
-│   └── logo-agent.js          ← Ядро: 5 тем, 14 триггеров, resolve()
+│   ├── logo-agent.js          ← Ядро: 5 тем, 14 триггеров, resolve()
+│   ├── setup.sh               ← Автоматическая установка в проект
+│   └── prepare-commit-msg     ← Git-хук: логотип в теле коммита
 ├── logos/
 │   ├── light.svg              ← Белый фон, графитовый текст
 │   ├── dark.svg               ← Тёмный фон, белый текст
