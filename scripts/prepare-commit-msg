@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# prepare-commit-msg — Git-хук для автоматической вставки логотипа
+# в подпись каждого коммита. Видно в git log --format=full.
+#
+# Установка:
+#   cp scripts/prepare-commit-msg .git/hooks/
+#   chmod +x .git/hooks/prepare-commit-msg
+#
+# Или через setup.sh:
+#   bash scripts/setup.sh
+#
+# Приоритет определения режима:
+#   1. Файл .logo-mode в корне репозитория (ручной выбор)
+#   2. auto — определяется по description из package.json
+#
+# Требования: jq, node
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+# Пропускаем amend, merge, squash
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ]; then
+    exit 0
+fi
+
+# Корень репозитория
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [ -z "$REPO_ROOT" ]; then
+    exit 0
+fi
+
+cd "$REPO_ROOT" || exit 0
+
+# Режим логотипа
+if [ -f ".logo-mode" ]; then
+    MODE="$(cat .logo-mode | tr -d '[:space:]')"
+else
+    MODE="auto"
+fi
+
+# Описание из package.json
+if [ -f "package.json" ] && command -v jq >/dev/null 2>&1; then
+    DESCRIPTION="$(jq -r '.description // ""' package.json)"
+else
+    DESCRIPTION=""
+fi
+
+if [ -z "$DESCRIPTION" ]; then
+    exit 0
+fi
+
+# Определяем тему
+if [ -f "scripts/logo-agent.js" ] && command -v node >/dev/null 2>&1; then
+    LOGO_THEME="$(node scripts/logo-agent.js "$DESCRIPTION" "$MODE")"
+else
+    LOGO_THEME="light"
+fi
+
+# Читаем SVG
+if [ -f "logos/${LOGO_THEME}.svg" ]; then
+    LOGO_SVG="$(cat "logos/${LOGO_THEME}.svg")"
+else
+    LOGO_SVG="[logo: ${LOGO_THEME}]"
+fi
+
+# Имя проекта
+if [ -f "package.json" ] && command -v jq >/dev/null 2>&1; then
+    PROJECT_NAME="$(jq -r '.name // "project"' package.json)"
+else
+    PROJECT_NAME="project"
+fi
+
+# Добавляем в конец сообщения коммита
+echo "" >> "$COMMIT_MSG_FILE"
+echo "---" >> "$COMMIT_MSG_FILE"
+echo "project: ${PROJECT_NAME}" >> "$COMMIT_MSG_FILE"
+echo "logo-theme: ${LOGO_THEME}" >> "$COMMIT_MSG_FILE"
+echo "" >> "$COMMIT_MSG_FILE"
+echo "$LOGO_SVG" >> "$COMMIT_MSG_FILE"
