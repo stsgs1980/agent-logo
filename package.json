@@ -1,0 +1,17 @@
+{
+  "name": "logo-agent-project",
+  "version": "1.0.0",
+  "description": "AI-платформа для генерации изображений",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "logo": "node scripts/logo-agent.js",
+    "build": "echo 'Build step — logo will be resolved by CI'",
+    "test": "node scripts/logo-agent.js \"Тёмная AI-платформа\" auto && node scripts/logo-agent.js \"Образовательная платформа\" auto"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  },
+  "keywords": ["logo", "signature", "email", "ci"],
+  "license": "MIT"
+}

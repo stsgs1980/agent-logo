@@ -1,0 +1,72 @@
+name: Logo Resolution
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  resolve-logo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Read project description from package.json
+        id: desc
+        run: |
+          DESCRIPTION=$(jq -r '.description // ""' package.json)
+          echo "description=$DESCRIPTION" >> "$GITHUB_OUTPUT"
+          echo "Project description: $DESCRIPTION"
+
+      - name: Resolve logo theme
+        id: theme
+        env:
+          DARK_MODE: ${{ vars.DARK_MODE || 'auto' }}
+        run: |
+          # Приоритет: переменная окружения DARK_MODE → auto
+          MODE="${DARK_MODE:-auto}"
+          DESCRIPTION="${{ steps.desc.outputs.description }}"
+
+          LOGO_THEME=$(node scripts/logo-agent.js "$DESCRIPTION" "$MODE")
+          echo "logo_theme=$LOGO_THEME" >> "$GITHUB_OUTPUT"
+          echo "Resolved logo theme: $LOGO_THEME (mode=$MODE, description=$DESCRIPTION)"
+
+      - name: Inject logo SVG into README
+        run: |
+          LOGO_THEME="${{ steps.theme.outputs.logo_theme }}"
+
+          # Проверяем, что файл логотипа существует
+          if [ ! -f "logos/${LOGO_THEME}.svg" ]; then
+            echo "::warning::Logo file logos/${LOGO_THEME}.svg not found, falling back to light.svg"
+            LOGO_THEME="light"
+          fi
+
+          # Читаем SVG-контент
+          LOGO_SVG=$(cat "logos/${LOGO_THEME}.svg")
+
+          # Заменяем плейсхолдер {{LOGO}} в README.md
+          if grep -q '{{LOGO}}' README.md; then
+            sed -i "s|{{LOGO}}|${LOGO_SVG}|g" README.md
+            echo "Logo injected into README.md (theme: ${LOGO_THEME})"
+          else
+            echo "::warning::Placeholder {{LOGO}} not found in README.md"
+          fi
+
+      - name: Commit updated README (if changed)
+        if: github.event_name == 'push'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet README.md || git commit -am "chore: update logo in README (${{ steps.theme.outputs.logo_theme }})"
+          git push
