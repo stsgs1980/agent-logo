@@ -46,22 +46,22 @@ jobs:
           echo "logo_theme=$LOGO_THEME" >> "$GITHUB_OUTPUT"
           echo "Resolved logo theme: $LOGO_THEME (mode=$MODE, description=$DESCRIPTION)"
 
-      - name: Inject logo SVG into README
+      - name: Update logo in README
         run: |
           LOGO_THEME="${{ steps.theme.outputs.logo_theme }}"
 
           if [ ! -f "logos/${LOGO_THEME}.svg" ]; then
-            echo "::warning::Logo file logos/${LOGO_THEME}.svg not found, falling back to light.svg"
-            LOGO_THEME="light"
+            echo "::warning::Logo file logos/${LOGO_THEME}.svg not found, falling back to dark.svg"
+            LOGO_THEME="dark"
           fi
 
-          LOGO_SVG=$(cat "logos/${LOGO_THEME}.svg")
-
-          if grep -q '{{LOGO}}' README.md; then
-            sed -i "s|{{LOGO}}|${LOGO_SVG}|g" README.md
-            echo "Logo injected into README.md (theme: ${LOGO_THEME})"
+          # Replace the img src in README.md with the resolved theme
+          # Handles: <img src="logos/dark.svg" ...> → <img src="logos/new-theme.svg" ...>
+          if grep -q 'img src="logos/' README.md; then
+            sed -i "s|img src=\"logos/[a-z\-]*\.svg\"|img src=\"logos/${LOGO_THEME}.svg\"|g" README.md
+            echo "Logo updated in README.md (theme: ${LOGO_THEME})"
           else
-            echo "::warning::Placeholder {{LOGO}} not found in README.md"
+            echo "::notice::No logo img tag found in README.md"
           fi
 
       - name: Commit updated README (if changed)
