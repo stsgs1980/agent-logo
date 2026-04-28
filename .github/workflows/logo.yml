@@ -11,6 +11,9 @@ on:
       - main
       - master
 
+permissions:
+  contents: write
+
 jobs:
   resolve-logo:
     runs-on: ubuntu-latest
@@ -55,8 +58,6 @@ jobs:
             LOGO_THEME="dark"
           fi
 
-          # Replace the img src in README.md with the resolved theme
-          # Handles: <img src="logos/dark.svg" ...> → <img src="logos/new-theme.svg" ...>
           if grep -q 'img src="logos/' README.md; then
             sed -i "s|img src=\"logos/[a-z\-]*\.svg\"|img src=\"logos/${LOGO_THEME}.svg\"|g" README.md
             echo "Logo updated in README.md (theme: ${LOGO_THEME})"
