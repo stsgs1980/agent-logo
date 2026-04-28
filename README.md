@@ -1,6 +1,6 @@
 # LOGO — NEURO Brand Identity Agent
 
-<img src="logos/light.jpg" alt="NEURO" width="250">
+<img src="logos/dark.svg" alt="NEURO" width="250">
 
 Автоматическая система выбора логотипа NEURO по описанию проекта.
 Определяет тему (light / dark / mono / outline / inverted) и подставляет нужный SVG.
