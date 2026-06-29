@@ -1,13 +1,39 @@
-# LOGO — NEURO Brand Identity Agent
+# LOGO - NEURO Brand Identity Agent
 
 <img src="logos/light.svg" alt="NEURO" width="250">
 
 Автоматическая система выбора логотипа NEURO по описанию проекта.
 Определяет тему (light / dark / mono / outline / inverted) и подставляет нужный SVG.
 
----
 
-## Быстрый старт — встроить в проект
+[![Express](https://img.shields.io/badge/Express-000000?style=flat-square)](https://expressjs.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+
+## Table of Contents
+
+- [Быстрый старт - встроить в проект](#быстрый-старт---встроить-в-проект)
+- [Встроить логотип:](#встроить-логотип:)
+- [Клонировать LOGO-репозиторий во временную папку](#клонировать-logo-репозиторий-во-временную-папку)
+- [Скопировать ядро и логотипы в проект](#скопировать-ядро-и-логотипы-в-проект)
+- [Перейти в проект и запустить установку](#перейти-в-проект-и-запустить-установку)
+- [Что куда встраивать](#что-куда-встраивать)
+- [CLI](#cli)
+- [→ dark](#→-dark)
+- [→ light](#→-light)
+- [→ dark  (принудительно)](#→-dark--принудительно)
+- [HTTP API - Email-подпись](#http-api---email-подпись)
+- [CI - GitHub Actions](#ci---github-actions)
+- [Git Hook - логотип в коммитах](#git-hook---логотип-в-коммитах)
+- [Установка (один раз в каждом клоне репозитория)](#установка-один-раз-в-каждом-клоне-репозитория)
+- [Добавить новую тему](#добавить-новую-тему)
+- [Структура репозитория](#структура-репозитория)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [License](#license)
+
+## Быстрый старт - встроить в проект
 
 ### В существующий проект
 
@@ -26,7 +52,7 @@ bash scripts/setup.sh
 mkdir my-new-project && cd my-new-project
 git init
 npm init -y
-# Встроить логотип:
+## Встроить логотип:
 git clone https://github.com/stsgs1980/agent-logo.git /tmp/LOGO
 cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ .
 bash scripts/setup.sh
@@ -43,14 +69,14 @@ bash scripts/setup.sh
 Если проект создаётся в [Z.ai](https://chat.z.ai/), рабочий каталог проекта находится по пути `/home/z/my-project/download/`. Попросите агента встроить логотип — он выполнит команды:
 
 ```bash
-# Клонировать LOGO-репозиторий во временную папку
+## Клонировать LOGO-репозиторий во временную папку
 git clone https://github.com/stsgs1980/agent-logo.git /tmp/LOGO
 
-# Скопировать ядро и логотипы в проект
+## Скопировать ядро и логотипы в проект
 cp -r /tmp/LOGO/scripts/ /home/z/my-project/download/<имя-проекта>/scripts/
 cp -r /tmp/LOGO/logos/   /home/z/my-project/download/<имя-проекта>/logos/
 
-# Перейти в проект и запустить установку
+## Перейти в проект и запустить установку
 cd /home/z/my-project/download/<имя-проекта>
 bash scripts/setup.sh
 ```
@@ -86,7 +112,7 @@ cd /home/z/my-project/download/<имя-проекта> && bash scripts/setup.sh
 ```
 
 ```bash
-npm install
+bun install
 ```
 
 После этого модуль доступен:
@@ -101,7 +127,6 @@ var theme = logo.resolve(
 // theme === 'dark'
 ```
 
----
 
 ## Что куда встраивать
 
@@ -114,7 +139,6 @@ var theme = logo.resolve(
 | Git-хук | `scripts/prepare-commit-msg` | `.git/hooks/` | Если хотите лого в коммитах |
 | Сервер подписи | Код из `server.js` | В ваш Express-роутер | Если нужна email-подпись |
 
----
 
 ## CLI
 
@@ -126,13 +150,13 @@ node scripts/logo-agent.js "описание проекта" [режим]
 
 ```bash
 node scripts/logo-agent.js "Тёмная AI-платформа" auto
-# → dark
+## → dark
 
 node scripts/logo-agent.js "Образовательная платформа" auto
-# → light
+## → light
 
 node scripts/logo-agent.js "Образовательная платформа" dark
-# → dark  (принудительно)
+## → dark  (принудительно)
 ```
 
 ### Как работает детекция
@@ -144,7 +168,7 @@ node scripts/logo-agent.js "Образовательная платформа" d
 
 ### Карта адаптации
 
-```
+```bash
 Светлый UI:                     Тёмный UI:
   light     → light               light     → dark
   mono      → mono                mono      → mono-dark
@@ -153,9 +177,8 @@ node scripts/logo-agent.js "Образовательная платформа" d
   dark      → light (обратно)     dark      → dark
 ```
 
----
 
-## HTTP API — Email-подпись
+## HTTP API - Email-подпись
 
 Встроить в ваш Express-сервер:
 
@@ -197,9 +220,8 @@ app.get('/api/signature', function(req, res) {
 
 Результат — HTML-таблица, которую копируете в настройки подписи Gmail / Outlook / Apple Mail.
 
----
 
-## CI — GitHub Actions
+## CI - GitHub Actions
 
 Файл `.github/workflows/logo.yml` автоматически:
 
@@ -210,16 +232,15 @@ app.get('/api/signature', function(req, res) {
 
 **Принудительный режим:**
 ```bash
-DARK_MODE=dark npm run build   # всегда тёмная тема
-DARK_MODE=light npm run build  # всегда светлая тема
+DARK_MODE=dark bun run build   # всегда тёмная тема
+DARK_MODE=light bun run build  # всегда светлая тема
 ```
 
----
 
-## Git Hook — логотип в коммитах
+## Git Hook - логотип в коммитах
 
 ```bash
-# Установка (один раз в каждом клоне репозитория)
+## Установка (один раз в каждом клоне репозитория)
 cp scripts/prepare-commit-msg .git/hooks/
 chmod +x .git/hooks/prepare-commit-msg
 ```
@@ -232,7 +253,6 @@ chmod +x .git/hooks/prepare-commit-msg
 echo "dark" > .logo-mode
 ```
 
----
 
 ## Добавить новую тему
 
@@ -241,11 +261,10 @@ echo "dark" > .logo-mode
 3. Создать `logos/<theme>.svg`
 4. Остальные файлы не трогать — они всё подхватят
 
----
 
 ## Структура репозитория
 
-```
+```bash
 LOGO/
 ├── scripts/
 │   ├── logo-agent.js          ← Ядро: 5 тем, 14 триггеров, resolve()
@@ -265,3 +284,43 @@ LOGO/
 ├── package.json
 └── README.md
 ```
+
+
+## Features
+
+- Feature 1 - description
+- Feature 2 - description
+
+
+## Tech Stack
+
+- **Framework** - Express
+- **Styling** - SVG, HTML
+
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20+ or Bun
+
+### Installation
+
+```bash
+git clone https://github.com/stsgs1980/agent-logo.git
+cd agent-logo
+bun install
+```
+
+### Run
+
+```bash
+bun run dev
+```
+
+## License
+
+[MIT](LICENSE)
+
+---
+Built with: Express
