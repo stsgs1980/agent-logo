@@ -1,302 +1,27 @@
-# LOGO - NEURO Brand Identity Agent
+# NEURO Brand Identity Agent
 
-<img src="logos/light.svg" alt="NEURO" width="250">
-
-Автоматическая система выбора логотипа NEURO по описанию проекта.
-Определяет тему (light / dark / mono / outline / inverted) и подставляет нужный SVG.
-
+Automatic logo theme selection system that analyzes a project description, determines the optimal theme (light / dark / mono / outline / inverted), and substitutes the corresponding SVG logo.
 
 [![Express](https://img.shields.io/badge/Express-000000?style=flat-square)](https://expressjs.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-
-## Table of Contents
-
-- [Быстрый старт - встроить в проект](#быстрый-старт---встроить-в-проект)
-- [Встроить логотип:](#встроить-логотип:)
-- [Клонировать LOGO-репозиторий во временную папку](#клонировать-logo-репозиторий-во-временную-папку)
-- [Скопировать ядро и логотипы в проект](#скопировать-ядро-и-логотипы-в-проект)
-- [Перейти в проект и запустить установку](#перейти-в-проект-и-запустить-установку)
-- [Что куда встраивать](#что-куда-встраивать)
-- [CLI](#cli)
-- [→ dark](#→-dark)
-- [→ light](#→-light)
-- [→ dark  (принудительно)](#→-dark--принудительно)
-- [HTTP API - Email-подпись](#http-api---email-подпись)
-- [CI - GitHub Actions](#ci---github-actions)
-- [Git Hook - логотип в коммитах](#git-hook---логотип-в-коммитах)
-- [Установка (один раз в каждом клоне репозитория)](#установка-один-раз-в-каждом-клоне-репозитория)
-- [Добавить новую тему](#добавить-новую-тему)
-- [Структура репозитория](#структура-репозитория)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [License](#license)
-
-## Быстрый старт - встроить в проект
-
-### В существующий проект
-
-Например, если ваш проект лежит в `~/projects/my-app`:
-
-```bash
-git clone https://github.com/stsgs1980/agent-logo.git /tmp/LOGO
-cd ~/projects/my-app
-cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ .
-bash scripts/setup.sh
-```
-
-### В новый проект
-
-```bash
-mkdir my-new-project && cd my-new-project
-git init
-npm init -y
-## Встроить логотип:
-git clone https://github.com/stsgs1980/agent-logo.git /tmp/LOGO
-cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ .
-bash scripts/setup.sh
-```
-
-`setup.sh` автоматически:
-- проверит зависимости (node, jq)
-- установит git-хук `prepare-commit-msg`
-- проверит `description` в `package.json`
-- определит тему логотипа для вашего проекта
-
-### В песочнице Z.ai
-
-Если проект создаётся в [Z.ai](https://chat.z.ai/), рабочий каталог проекта находится по пути `/home/z/my-project/download/`. Попросите агента встроить логотип — он выполнит команды:
-
-```bash
-## Клонировать LOGO-репозиторий во временную папку
-git clone https://github.com/stsgs1980/agent-logo.git /tmp/LOGO
-
-## Скопировать ядро и логотипы в проект
-cp -r /tmp/LOGO/scripts/ /home/z/my-project/download/<имя-проекта>/scripts/
-cp -r /tmp/LOGO/logos/   /home/z/my-project/download/<имя-проекта>/logos/
-
-## Перейти в проект и запустить установку
-cd /home/z/my-project/download/<имя-проекта>
-bash scripts/setup.sh
-```
-
-Или одной командой:
-
-```bash
-git clone https://github.com/stsgs1980/agent-logo.git /tmp/LOGO && \
-cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ /home/z/my-project/download/<имя-проекта>/ && \
-cd /home/z/my-project/download/<имя-проекта> && bash scripts/setup.sh
-```
-
-**Что происходит дальше:**
-- CI-воркфлоу (`.github/workflows/logo.yml`) при push в GitHub автоматически определит тему по `description` из `package.json` и вставит SVG вместо `{{LOGO}}` в README.md
-- Git-хук добавит логотип в тело каждого коммита
-- Сервер подписи (`server.js`) доступен по HTTP внутри песочницы
-
-**Пример в чате Z.ai:**
-> «Создай проект и встрои логотип NEURO»
-
-Агент сам клонирует LOGO-репозиторий, скопирует файлы и запустит `setup.sh`.
-
-### Использование как npm-модуль
-
-В `package.json` вашего проекта:
-
-```json
-{
-  "dependencies": {
-    "logo-agent": "github:stsgs1980/agent-logo"
-  }
-}
-```
-
-```bash
-bun install
-```
-
-После этого модуль доступен:
-
-```js
-var logo = require('logo-agent/scripts/logo-agent');
-var theme = logo.resolve(
-  logo.detectContent('Тёмная AI-платформа'),
-  logo.detectDarkUI('Тёмная AI-платформа'),
-  'auto'
-);
-// theme === 'dark'
-```
-
-
-## Что куда встраивать
-
-| Компонент | Файл | Куда | Когда |
-|---|---|---|---|
-| Ядро детекции | `scripts/logo-agent.js` | `scripts/` проекта | Всегда — основа |
-| Установка | `scripts/setup.sh` | `scripts/` проекта | Всегда — автоматическая настройка |
-| SVG логотипы | `logos/*.svg` (7 штук) | `logos/` проекта | Всегда — подстановка |
-| CI воркфлоу | `.github/workflows/logo.yml` | `.github/workflows/` | Если есть GitHub Actions |
-| Git-хук | `scripts/prepare-commit-msg` | `.git/hooks/` | Если хотите лого в коммитах |
-| Сервер подписи | Код из `server.js` | В ваш Express-роутер | Если нужна email-подпись |
-
-
-## CLI
-
-```bash
-node scripts/logo-agent.js "описание проекта" [режим]
-```
-
-**Режимы:** `auto` (по умолчанию) | `dark` | `light`
-
-```bash
-node scripts/logo-agent.js "Тёмная AI-платформа" auto
-## → dark
-
-node scripts/logo-agent.js "Образовательная платформа" auto
-## → light
-
-node scripts/logo-agent.js "Образовательная платформа" dark
-## → dark  (принудительно)
-```
-
-### Как работает детекция
-
-1. Текст описания проверяется по 5 наборам ключевых слов (`contentRules`)
-2. Набор с максимальным числом совпадений определяет тему: `light` / `dark` / `mono` / `outline` / `inverted`
-3. Если в описании есть триггеры тёмного UI (`darkUIKeys` — 14 ключей) — тема адаптируется через `darkAdapt`
-4. Ручной режим (`dark` / `light`) перекрывает авто-детекцию
-
-### Карта адаптации
-
-```bash
-Светлый UI:                     Тёмный UI:
-  light     → light               light     → dark
-  mono      → mono                mono      → mono-dark
-  outline   → outline             outline   → outline-dark
-  inverted  → inverted            inverted  → inverted
-  dark      → light (обратно)     dark      → dark
-```
-
-
-## HTTP API - Email-подпись
-
-Встроить в ваш Express-сервер:
-
-```js
-var logoAgent = require('./scripts/logo-agent');
-var detectContent = logoAgent.detectContent;
-var detectDarkUI  = logoAgent.detectDarkUI;
-var resolve       = logoAgent.resolve;
-
-var fs   = require('fs');
-var path = require('path');
-
-function readLogoSvg(theme) {
-    var safe = theme.replace(/[^a-z0-9\-]/gi, '');
-    try { return fs.readFileSync(path.join(__dirname, 'logos', safe + '.svg'), 'utf8'); }
-    catch (e) { return fs.readFileSync(path.join(__dirname, 'logos', 'light.svg'), 'utf8'); }
-}
-
-function sigHTML(logoSvg, q) {
-    return '<table cellpadding="0" cellspacing="0"'
-      + ' style="border-top:2px solid #FA3913;padding-top:10px;font-family:Arial,sans-serif">'
-      + '<tr><td style="padding-right:14px;vertical-align:middle">'
-      + logoSvg + '</td>'
-      + '<td style="vertical-align:middle">'
-      + '<div style="font-size:15px;font-weight:bold;color:#343439">' + (q.name||'') + '</div>'
-      + '<div style="font-size:12px;color:#999;margin-top:2px">' + (q.role||'') + '</div>'
-      + '<div style="font-size:11px;color:#bbb;margin-top:4px">'
-      + (q.email||'') + ' | ' + (q.phone||'') + '</div>'
-      + '</td></tr></table>';
-}
-
-app.get('/api/signature', function(req, res) {
-    var content = detectContent(req.query.project || '');
-    var dark    = detectDarkUI(req.query.project || '');
-    var theme   = resolve(content, dark, req.query.mode || 'auto');
-    res.type('html').send(sigHTML(readLogoSvg(theme), req.query));
-});
-```
-
-Результат — HTML-таблица, которую копируете в настройки подписи Gmail / Outlook / Apple Mail.
-
-
-## CI - GitHub Actions
-
-Файл `.github/workflows/logo.yml` автоматически:
-
-1. Читает `description` из `package.json`
-2. Вызывает `logo-agent.js` для определения темы
-3. Подставляет SVG вместо `{{LOGO}}` в README.md
-4. Коммитит обновлённый README
-
-**Принудительный режим:**
-```bash
-DARK_MODE=dark bun run build   # всегда тёмная тема
-DARK_MODE=light bun run build  # всегда светлая тема
-```
-
-
-## Git Hook - логотип в коммитах
-
-```bash
-## Установка (один раз в каждом клоне репозитория)
-cp scripts/prepare-commit-msg .git/hooks/
-chmod +x .git/hooks/prepare-commit-msg
-```
-
-При каждом `git commit` в тело коммита добавляется SVG-логотип.
-Видно в `git log --format=full`.
-
-Ручной override: создать файл `.logo-mode` в корне:
-```bash
-echo "dark" > .logo-mode
-```
-
-
-## Добавить новую тему
-
-1. В `scripts/logo-agent.js` — добавить ключевые слова в `contentRules`
-2. Добавить вариант в `darkAdapt` / `lightAdapt`
-3. Создать `logos/<theme>.svg`
-4. Остальные файлы не трогать — они всё подхватят
-
-
-## Структура репозитория
-
-```bash
-LOGO/
-├── scripts/
-│   ├── logo-agent.js          ← Ядро: 5 тем, 14 триггеров, resolve()
-│   ├── setup.sh               ← Автоматическая установка в проект
-│   └── prepare-commit-msg     ← Git-хук: логотип в теле коммита
-├── logos/
-│   ├── light.svg              ← Белый фон, графитовый текст
-│   ├── dark.svg               ← Тёмный фон, белый текст
-│   ├── mono.svg               ← Монохром, белый фон
-│   ├── mono-dark.svg          ← Монохром, тёмный фон
-│   ├── outline.svg            ← Контур, белый фон
-│   ├── outline-dark.svg       ← Контур, тёмный фон
-│   └── inverted.svg           ← Коралловый фон, инвертированные цвета
-├── server.js                  ← Express: /api/signature + /api/logo-theme
-├── .github/workflows/
-│   └── logo.yml               ← CI: SVG в README по description
-├── package.json
-└── README.md
-```
-
-
 ## Features
 
-- Feature 1 - description
-- Feature 2 - description
-
+- 5 logo themes: light, dark, mono, mono-dark, outline, outline-dark, inverted (7 SVG variants)
+- Keyword-based content detection across 5 rule sets for automatic theme selection
+- 14 dark UI trigger keys with automatic theme adaptation (light -> dark, mono -> mono-dark, outline -> outline-dark)
+- CLI interface for theme resolution from project description text
+- Automatic CI integration via GitHub Actions -- reads `description` from `package.json` and injects SVG into README
+- Git hook for adding logo to every commit body (visible in `git log --format=full`)
+- HTTP API for generating email signatures with the correct logo theme
+- npm module export for programmatic use in other projects
 
 ## Tech Stack
 
-- **Framework** - Express
-- **Styling** - SVG, HTML
-
+- **Runtime** - Node.js
+- **Server** - Express
+- **Graphics** - SVG
+- **Automation** - Shell scripts, GitHub Actions
 
 ## Getting Started
 
@@ -315,12 +40,123 @@ bun install
 ### Run
 
 ```bash
-bun run dev
+node scripts/logo-agent.js "project description" [mode]
 ```
+
+Modes: `auto` (default) | `dark` | `light`
+
+```bash
+node scripts/logo-agent.js "Dark AI platform" auto
+# -> dark
+
+node scripts/logo-agent.js "Educational platform" auto
+# -> light
+
+node scripts/logo-agent.js "Educational platform" dark
+# -> dark  (forced)
+```
+
+### Embed into an existing project
+
+```bash
+git clone https://github.com/stsgs1980/agent-logo.git /tmp/LOGO
+cd your-project
+cp -r /tmp/LOGO/scripts/ /tmp/LOGO/logos/ .
+bash scripts/setup.sh
+```
+
+`setup.sh` automatically checks dependencies (node, jq), installs the git hook `prepare-commit-msg`, reads `description` from `package.json`, and determines the logo theme for the project.
+
+### Use as npm module
+
+```json
+{
+  "dependencies": {
+    "logo-agent": "github:stsgs1980/agent-logo"
+  }
+}
+```
+
+```bash
+bun install
+```
+
+```js
+var logo = require('logo-agent/scripts/logo-agent');
+var theme = logo.resolve(
+  logo.detectContent('Dark AI platform'),
+  logo.detectDarkUI('Dark AI platform'),
+  'auto'
+);
+// theme === 'dark'
+```
+
+## API Reference
+
+### CLI
+
+```bash
+node scripts/logo-agent.js "description" [mode]
+```
+
+### HTTP API (Express)
+
+Embed into your Express server to generate email signatures:
+
+```js
+var logoAgent = require('./scripts/logo-agent');
+
+app.get('/api/signature', function(req, res) {
+    var content = logoAgent.detectContent(req.query.project || '');
+    var dark    = logoAgent.detectDarkUI(req.query.project || '');
+    var theme   = logoAgent.resolve(content, dark, req.query.mode || 'auto');
+    // ... read SVG, build HTML table signature
+    res.type('html').send(signatureHtml);
+});
+```
+
+### Detection algorithm
+
+1. Description text is checked against 5 keyword sets (`contentRules`)
+2. The set with the most matches determines the theme: light / dark / mono / outline / inverted
+3. If dark UI triggers are found (14 keys in `darkUIKeys`), the theme adapts via `darkAdapt`
+4. Manual mode (`dark` / `light`) overrides auto-detection
+
+### Adaptation map
+
+| Light UI | | Dark UI | |
+|----------|---|---------|---|
+| light | -> light | light | -> dark |
+| mono | -> mono | mono | -> mono-dark |
+| outline | -> outline | outline | -> outline-dark |
+| inverted | -> inverted | inverted | -> inverted |
+| dark | -> light | dark | -> dark |
+
+## Project Structure
+
+- `scripts/logo-agent.js` - Core: 5 themes, 14 triggers, resolve()
+- `scripts/setup.sh` - Automatic installation into a project
+- `scripts/prepare-commit-msg` - Git hook: logo in commit body
+- `logos/light.svg` - White background, graphite text
+- `logos/dark.svg` - Dark background, white text
+- `logos/mono.svg` - Monochrome, white background
+- `logos/mono-dark.svg` - Monochrome, dark background
+- `logos/outline.svg` - Outline, white background
+- `logos/outline-dark.svg` - Outline, dark background
+- `logos/inverted.svg` - Coral background, inverted colors
+- `server.js` - Express server: /api/signature + /api/logo-theme
+- `.github/workflows/logo.yml` - CI: SVG in README by description
+
+## Adding a New Theme
+
+1. Add keywords to `contentRules` in `scripts/logo-agent.js`
+2. Add a variant to `darkAdapt` / `lightAdapt`
+3. Create `logos/<theme>.svg`
+4. All other files pick it up automatically
 
 ## License
 
 [MIT](LICENSE)
 
 ---
-Built with: Express
+Built with: Node.js + Express
